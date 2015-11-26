@@ -7,18 +7,27 @@ import (
 	"strings"
 )
 
+// BotFunc is a function that can be plugged in to handle commands.
 type BotFunc func([]string) string
 
+// Bot is a struct representing a bot.
 type Bot struct {
+	// Nick used by the bot.
 	Nick string
 
-	ChannelNames  []string
+	// ChannelNames is slice of names of channels that bot
+	// is going to log in.
+	ChannelNames []string
+	// CommandPrefix is prefix used before command, e.g "~".
 	CommandPrefix string
 
-	conn     net.Conn
+	conn net.Conn
+
+	// Commands maps names of commands to bot functions.
 	Commands map[string]BotFunc
 }
 
+// New creates new bot.
 func New(nick string) *Bot {
 	channelNames := []string{"#carneliantest", "#carneliantest2"}
 	commandPrefix := ">>"
@@ -33,6 +42,7 @@ func New(nick string) *Bot {
 	}
 }
 
+// Connect connects bot to irc server and joins channels.
 func (b *Bot) Connect() {
 	conn, err := net.Dial("tcp", "irc.freenode.net:6667")
 	b.conn = conn
@@ -50,6 +60,8 @@ func (b *Bot) Connect() {
 	}
 }
 
+// ReadAndRespond is a main loop that handles messages from the
+// bot's connection.
 func (b *Bot) ReadAndRespond() {
 	reader := bufio.NewReader(b.conn)
 	for {
@@ -75,6 +87,8 @@ func (b *Bot) Pong() {
 	}
 }
 
+// HandleCommand gets a message as text, parses and handles it.
+// TODO(att): extract parsing as separate method and test it!
 func (b *Bot) HandleCommand(message string) {
 	byColon := strings.Split(message, ":")
 	if len(byColon) != 3 {
@@ -99,6 +113,7 @@ func (b *Bot) HandleCommand(message string) {
 	}
 }
 
+// TODO(att): Move functions to a function registry.
 func echo(args []string) string {
 	return strings.Join(args, " ")
 }
